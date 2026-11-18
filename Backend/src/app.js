@@ -1,3 +1,5 @@
+import path from "path";
+import { fileURLToPath } from "url";
 import express from "express";
 import cookieParser from "cookie-parser";
 import passport from "passport";
@@ -11,6 +13,10 @@ import socialRouter from "./routes/social.routes.js";
 import documentRouter from "./routes/document.routes.js";
 import mongoose from "mongoose";
 import { generalLimiter } from "./middlewares/rateLimiter.middleware.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicPath = path.resolve(__dirname, "../public");
 
 const app = express();
 
@@ -59,9 +65,11 @@ app.use(passport.initialize());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get('/', (req, res) => {
-    res.json({ Message: "Welcome to Parsu Backend API" })
-})
+// ─── Static Files (Frontend SPA) ─────────────────────────────────────────────
+app.use(express.static(publicPath));
+
+
+// Root URL serves static SPA index.html
 
 // Comprehensive Health Check Endpoint
 app.get(["/health", "/api/health"], (req, res) => {
@@ -113,6 +121,20 @@ app.use("/api/notifications", notificationRouter)
 app.use("/api/media", mediaRouter)
 
 // ─── 404 Catch-All for unknown API endpoints ──────────────────────────────────
+
+// ─── Frontend SPA Wildcard Route (Render Single-URL Deployment) ───────────────
+app.use((req, res, next) => {
+    if (req.path.startsWith("/api") || req.path === "/health") {
+        return next();
+    }
+    const indexHtml = path.join(publicPath, "index.html");
+    res.sendFile(indexHtml, (err) => {
+        if (err) {
+            res.json({ message: "Welcome to Parsu Backend API" });
+        }
+    });
+});
+
 app.use("/api", (req, res) => {
     res.status(404).json({ success: false, message: `Endpoint ${req.originalUrl} not found` });
 });
@@ -137,4 +159,5 @@ app.use((err, req, res, next) => {
 });
 
 export default app;
+
 

@@ -1,0 +1,1 @@
+import{aj as t}from"./index-j7w4JAEX.js";async function n({plan:s,billingCycle:a}){return(await t.post("/api/subscription/create-order",{plan:s,billingCycle:a})).data}async function o(s){return(await t.post("/api/subscription/verify-payment",s)).data}async function i(){return(await t.get("/api/subscription/me")).data}export{n as c,i as f,o as v};
